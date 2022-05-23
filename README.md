@@ -1,70 +1,70 @@
-# Getting Started with Create React App
+### useCallback
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+useCallback()은 useMemo()와 동일하게 memoization기법을 사용하여 메모리에 캐싱하고 렌더링시 다시 캐싱된 값을 사용하는것에 공통점이 있다.
 
-## Available Scripts
+단, useMemo()와의 명백한 차이는 다음과 같다.
 
-In the project directory, you can run:
+- useMemo() → 값(primitive)을 memoization하고 재호출시 memoization된 값을 반환
+- useCallback() → 함수(Object)를 memoization하고 재호출 시 memoization된 함수를 반환
 
-### `npm start`
+하는 것이다
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### useCallback 예제
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- useEffect()의 의존성 배열에 someFunc라는 함수를 추가하여 변경이 일어날 경우 콘솔에 로그를 출력하도록 한다.
+    - useCallback을 사용하지 않을 경우
+        - number를 변경한다(state) →  렌더링이 일어나고 컴포넌트 함수App이 재호출된다 → someFunc()를 가리키는 메모리 주소값이 변경된다 → useEffect가 실행된다
+        - number 뿐만 아니라 toggle state가 업데이트되거나 다른상황에서 렌더링이 일어나면 useEffect()가 실행된다
+    - useCallback을 사용했을 경우
 
-### `npm test`
+      **의존성 배열이 빈 배열일 경우**
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+        - 최초 호출시 someFunc가 memoization된다 → number를 변경한다(state) →  렌더링이 일어나고 컴포넌트 함수App이 재호출된다 → someFunc가 memoization된 함수의 주소를 가리키기 때문에 변화가 일어나지 않음 → useEffect가 실행되지 않는다
+        - 그러나 최초 렌더링시 memoization되었을 때의 number를 메모리에 그대로 캐싱하고 있기 때문에 버튼을 눌러 함수 호출 시 변화한 number를 표현하지 못한다.
 
-### `npm run build`
+      **의존성 배열에 number 추가**
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+        - 최초 호출시 someFunc가 memoization된다 → number를 변경한다(state) →  렌더링이 일어나고 컴포넌트 함수App이 재호출된다 → 의존성으로 가지고있는 number가 변했기 때문에 memoization이 일어난다. → useEffect()가 실행된다
+        - number 가 변하는 상황을 제외한 다른 렌더링 상황에서는 memoization된 함수가 변하지 않으므로 useEffect()가 실행되지 않는다
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```jsx
+import './App.css';
+import {useCallback, useEffect, useState} from "react";
+import Box from "./Box";
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+function App() {
+    const [number, setNumber] = useState(0);
+    const [toggle, setToggle] = useState(true);
 
-### `npm run eject`
+    const someFunc = useCallback(() => {
+        console.log('someFunc : number', number)
+        return;
+    }, [number]);
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+    // const someFunc = () => {
+    //   console.log('someFunc : number', number)
+    //   return;
+    // }
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+    useEffect(() => {
+        console.log("someFunc가 변경되었습니다. ")
+    }, [someFunc])
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+    return (
+        <div className="App" style={{
+            backgroundColor: isDark ? 'black' : 'white'
+        }}>
+            <input type="number" value={number} onChange={(e) => {
+                setNumber(e.target.value)
+            }}/>
+            <button onClick={() => {
+                setToggle(!toggle)
+            }}>{toggle.toString()}</button>
+            <br/>
+            <button onClick={someFunc}>call SomeFunc</button>
+        </div>
+    );
+}
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+export default App;
+```
