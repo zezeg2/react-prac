@@ -1,70 +1,136 @@
-# Getting Started with Create React App
+### useRef
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+- React 컴포넌트는 기본적으로 State가 변할때 마다 다시 렌더링 된다
+- 함수형 컴포넌트는 함수이기 때문에 렌더링이 될 때 마다 다시 호출되게 된다
 
-## Available Scripts
+  → 컴포넌트 함수가 다시 호출이 된다는 것은 함수 내부의 변수들이 모두 다시 초기화가 되고 함수의 모든 로직이 다시 실행된다는 것을 의미
 
-In the project directory, you can run:
 
-### `npm start`
+**다시 랜더링 되어도 동일한 참조값을 유지하려면?**
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+컴포넌트 내부 변수의 저장공간이 필요하다. 이 때 사용하는 것이 useRef Hook이다.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+useRef로 선언한 변수는 값이 변하더라도 렌더링이 일어나지 않고, 렌더링이 일어나더라도 값을 유지할 수 있다
 
-### `npm test`
+```jsx
+const 변수명 = useRef(초기값)
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- 위와같이 useRef는 변수명과 초기값을 설정하여 선언할 수 있다
+- ref값을 사용할 경우 `변수명.current` 로 가져올 수 있다.
+- ref값을 변경하려면 `변수명.current = ...` 로 변경시킬 수 있다
 
-### `npm run build`
+> 정리
+>
+>
+> state 변화 → 렌더링 → 컴포넌트 내부 변수들 초기화
+>
+> ref변화 →  No 렌더링 → 변수들의 값이 유지됨
+>
+> state의 변화 → 렌더링 → ref의 값 유지됨
+>
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 예시
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+**useRef() 작동 이해**
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```jsx
+import {useState, useRef, useEffect} from "react";
 
-### `npm run eject`
+function App() {
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+    const [countState, set_countState] = useState(0);
+    const countRef = useRef(0)
+    let countVar = 0
+    const totalRenderingCnt = useRef(0)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+    useEffect(() => {
+        totalRenderingCnt.current = totalRenderingCnt.current + 1;
+        console.log("렌더링 수 : ", totalRenderingCnt.current)
+    })
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+    function increaseCountState() {
+        set_countState(countState + 1)
+    }
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+    function increaseCountRef() {
+        countRef.current = countRef.current + 1
+        console.log("Ref : ",countRef);
+    }
 
-## Learn More
+    function increaseCountVar() {
+        countVar = countVar + 1;
+        console.log("Var : ",countVar);
+    }
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+    function pringResult() {
+        console.log("state ; ", countState "ref : ", countRef.current, "var : ", countVar )
+    }
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+    return (
+        <div className="App">
+            <p>State : {countState}</p>
+            <p>Ref : {countRef.current}</p>
+            <p>Var : {countVar}</p>
+            <button onClick={increaseCountState}>State 증가</button>
+            <button onClick={increaseCountRef}>Ref 증가</button>
+            <button onClick={increaseCountVar}>Var 증가</button>
+            <button onClick={pringResult}>state, ref, var 출력</button>
 
-### Code Splitting
+        </div>
+    );
+}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+export default App;
+```
 
-### Analyzing the Bundle Size
+1. state 증가, ref 증가, var 증가 각 3회후 출력버튼
+    - state값은 버튼을 클릭할 때마다 렌더링 되므로 화면에 표현됨
+    - ref, var 값은 변화시켜도 렌더링 되지 않으므로 화면에 표시되지 않지만 콘솔창에 로그로 남겨짐
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+   ![img.png](img.png)
 
-### Making a Progressive Web App
+2. state값 증가 (렌더링 유발)
+    - state값을 증가시켜 렌더링이 일어난 결과 ref값은 유지되었으나 var 값은 함수 재호출로 인해 초기화 되는 것을 알 수 있다.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+   ![img_1.png](img_1.png)
 
-### Advanced Configuration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+**Dom 요소 접근(포커스)**
 
-### Deployment
+```jsx
+import{useState, useRef, useEffect}from"react";
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+functionApp() {
 
-### `npm run build` fails to minify
+		constinputRef = useRef();
+		
+		useEffect(() => {
+				inputRef.current.focus()
+		},[])
+		
+		
+		functionlogin() {
+		        alert(`welcome ${inputRef.current.value}!`)
+		        inputRef.current.focus()
+		    }
+		
+		return(
+		        <div className="App">
+		
+		            <input ref={inputRef}type="text"placeholder="username"/>
+		            <buttonon Click={login}>login</button>
+		
+		        </div>
+		    );
+}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+export defaultApp;
+
+```
+
+- useRef로 특정 DOM 선택하기 : input 노드의 ref속성에  useRef()로 생성한 변수 입력
+
+  → 특정 컴포넌트에서 특정 DOM을 선택해야할 때 ref 속성을 사용해야하고, 함수형 컴포넌트에서 이를 설정할 때는 useRef를 사용하여 설정
+
+- useEffect로 최초 렌더링시 DOM에 접근한 ref 값에 포커스 하도록 설정
